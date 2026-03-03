@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamasColor</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="logo">NC</div>
+      <div>
+        <h1>NamasColor</h1>
+        <span class="subtitle">Color Picker para Power BI</span>
+      </div>
+    </div>
+    <button id="btn-export-theme" class="btn btn-accent" title="Exportar tema Power BI">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1v9M4 6l4 4 4-4M2 12v2h12v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Exportar Tema .json
+    </button>
+  </header>
+
+  <div class="layout">
+    <!-- Sidebar: History -->
+    <aside class="sidebar">
+      <h3>Historial</h3>
+      <div id="history-list" class="history-list"></div>
+      <button id="btn-clear-history" class="btn btn-small btn-ghost">Limpiar</button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Row 1: Picker + Color Display -->
+      <section class="card card-picker">
+        <div class="picker-row">
+          <button id="btn-pick" class="btn btn-primary btn-large">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/><circle cx="10" cy="10" r="2" fill="currentColor"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.5"/><line x1="10" y1="16" x2="10" y2="19" stroke="currentColor" stroke-width="1.5"/><line x1="1" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.5"/><line x1="16" y1="10" x2="19" y2="10" stroke="currentColor" stroke-width="1.5"/></svg>
+            Pick Color
+          </button>
+          <div class="color-display">
+            <div id="color-preview" class="color-preview" style="background:#E8443A"></div>
+            <div class="color-values">
+              <div class="color-row">
+                <label>HEX</label>
+                <input type="text" id="input-hex" class="input-mono" value="#E8443A" spellcheck="false">
+                <button class="btn btn-tiny btn-copy" data-copy="hex" title="Copiar">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1 1 0 00-1-1H3a1 1 0 00-1 1v6a1 1 0 001 1h1" stroke="currentColor" stroke-width="1.2"/></svg>
+                </button>
+              </div>
+              <div class="color-row">
+                <label>RGB</label>
+                <span id="val-rgb" class="value-mono">232, 68, 58</span>
+                <button class="btn btn-tiny btn-copy" data-copy="rgb" title="Copiar">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1 1 0 00-1-1H3a1 1 0 00-1 1v6a1 1 0 001 1h1" stroke="currentColor" stroke-width="1.2"/></svg>
+                </button>
+              </div>
+              <div class="color-row">
+                <label>HSL</label>
+                <span id="val-hsl" class="value-mono">3°, 78%, 57%</span>
+                <button class="btn btn-tiny btn-copy" data-copy="hsl" title="Copiar">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1 1 0 00-1-1H3a1 1 0 00-1 1v6a1 1 0 001 1h1" stroke="currentColor" stroke-width="1.2"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 2: Harmonies -->
+      <section class="card">
+        <h3>Armonias de color</h3>
+        <div class="harmony-tabs">
+          <button class="tab active" data-harmony="complementary">Complementario</button>
+          <button class="tab" data-harmony="analogous">Analogos</button>
+          <button class="tab" data-harmony="triadic">Triadico</button>
+          <button class="tab" data-harmony="split">Split-Comp.</button>
+        </div>
+        <div id="harmony-swatches" class="swatch-row"></div>
+      </section>
+
+      <!-- Row 3: Gradient -->
+      <section class="card">
+        <h3>Degradado</h3>
+        <div class="gradient-controls">
+          <div class="gradient-endpoint">
+            <div id="grad-color1" class="mini-swatch" style="background:#E8443A"></div>
+            <input type="text" id="grad-hex1" class="input-mono input-small" value="#E8443A" spellcheck="false">
+          </div>
+          <div class="gradient-slider-wrap">
+            <input type="range" id="grad-steps" min="2" max="20" value="5" class="slider">
+            <span id="grad-steps-val" class="slider-val">5 pasos</span>
+          </div>
+          <div class="gradient-endpoint">
+            <div id="grad-color2" class="mini-swatch" style="background:#4A90D9"></div>
+            <input type="text" id="grad-hex2" class="input-mono input-small" value="#4A90D9" spellcheck="false">
+          </div>
+        </div>
+        <div id="gradient-bar" class="gradient-bar"></div>
+        <div id="gradient-swatches" class="swatch-row"></div>
+      </section>
+
+      <!-- Row 4: Contrast -->
+      <section class="card">
+        <h3>Contraste WCAG</h3>
+        <div class="contrast-layout">
+          <div class="contrast-inputs">
+            <div class="contrast-pair">
+              <label>Texto</label>
+              <div class="contrast-color-pick">
+                <div id="contrast-fg-swatch" class="mini-swatch" style="background:#FFFFFF"></div>
+                <input type="text" id="contrast-fg" class="input-mono input-small" value="#FFFFFF" spellcheck="false">
+              </div>
+            </div>
+            <div class="contrast-pair">
+              <label>Fondo</label>
+              <div class="contrast-color-pick">
+                <div id="contrast-bg-swatch" class="mini-swatch" style="background:#1d1d1f"></div>
+                <input type="text" id="contrast-bg" class="input-mono input-small" value="#1d1d1f" spellcheck="false">
+              </div>
+            </div>
+            <button id="btn-use-current" class="btn btn-tiny btn-ghost">Usar color actual como texto</button>
+          </div>
+          <div class="contrast-result">
+            <div id="contrast-ratio" class="contrast-ratio">12.48:1</div>
+            <div class="contrast-badges">
+              <span id="badge-aa" class="badge pass">AA</span>
+              <span id="badge-aa-large" class="badge pass">AA Large</span>
+              <span id="badge-aaa" class="badge pass">AAA</span>
+              <span id="badge-aaa-large" class="badge pass">AAA Large</span>
+            </div>
+          </div>
+          <div id="contrast-preview" class="contrast-preview" style="background:#1d1d1f; color:#FFFFFF">
+            Texto de ejemplo — Aa Bb Cc 123
+          </div>
+        </div>
+      </section>
+
+      <!-- Row 5: Palettes -->
+      <section class="card">
+        <h3>Paletas predefinidas</h3>
+        <div id="palette-list" class="palette-list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="color-utils.js"></script>
+  <script src="contrast.js"></script>
+  <script src="palettes.js"></script>
+  <script src="theme-export.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

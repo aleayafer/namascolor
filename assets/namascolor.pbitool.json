@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "name": "NamasColor",
+  "description": "Color Picker para Power BI",
+  "path": "C:\\Program Files\\NamasColor\\NamasColor.exe",
+  "iconData": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMiIgaGVpZ2h0PSIzMiIgdmlld0JveD0iMCAwIDMyIDMyIj48cmVjdCB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHJ4PSI2IiBmaWxsPSIjRTg0NDNBIi8+PHRleHQgeD0iNTAlIiB5PSI1NSUiIGRvbWluYW50LWJhc2VsaW5lPSJtaWRkbGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZpbGw9IndoaXRlIiBmb250LWZhbWlseT0iU2Vnb2UgVUkiIGZvbnQtd2VpZ2h0PSI4MDAiIGZvbnQtc2l6ZT0iMTQiPk5DPC90ZXh0Pjwvc3ZnPg=="
+}

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <title>NamasColor Picker</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      overflow: hidden;
+      cursor: crosshair;
+      background: #000;
+    }
+    #screenshot {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      object-fit: cover;
+    }
+    #magnifier {
+      position: fixed;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.8);
+      pointer-events: none;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.5);
+      z-index: 10;
+      display: none;
+    }
+    #mag-canvas {
+      width: 160px;
+      height: 160px;
+    }
+    /* Crosshair in center of magnifier */
+    #magnifier::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 18px;
+      height: 18px;
+      transform: translate(-50%, -50%);
+      border: 2px solid rgba(255,255,255,0.9);
+      border-radius: 2px;
+      pointer-events: none;
+      box-shadow: 0 0 0 1px rgba(0,0,0,0.5);
+    }
+    #color-info {
+      position: fixed;
+      background: rgba(20,20,35,0.92);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 14px;
+      pointer-events: none;
+      z-index: 11;
+      display: none;
+      white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    #color-info .swatch {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      vertical-align: middle;
+      margin-right: 8px;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    #hint {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(20,20,35,0.85);
+      color: rgba(255,255,255,0.7);
+      padding: 8px 20px;
+      border-radius: 20px;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 13px;
+      z-index: 12;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="screenshot"></canvas>
+  <div id="magnifier">
+    <canvas id="mag-canvas" width="160" height="160"></canvas>
+  </div>
+  <div id="color-info"><span class="swatch"></span><span id="color-text">#000000</span></div>
+  <div id="hint">Click para capturar color &middot; Escape para cancelar</div>
+  <script src="picker.js"></script>
+</body>
+</html>

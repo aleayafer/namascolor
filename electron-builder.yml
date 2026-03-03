@@ -1,0 +1,31 @@
+appId: com.namasdata.namascolor
+productName: NamasColor
+copyright: Copyright © 2026 NamasData
+
+directories:
+  output: dist
+
+files:
+  - main.js
+  - preload.js
+  - src/**/*
+  - assets/**/*
+
+win:
+  icon: assets/icon.ico
+  sign: false
+  signAndEditExecutable: false
+  signDlls: false
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: true
+  include: build/installer.nsh
+  installerIcon: assets/icon.ico
+  uninstallerIcon: assets/icon.ico
+  installerHeaderIcon: assets/icon.ico

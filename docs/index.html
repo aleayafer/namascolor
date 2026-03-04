@@ -4,264 +4,495 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NamasColor — Color Picker para Power BI</title>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Montserrat', sans-serif;
       color: #232323;
-      background: #ffffff;
+      background: #000;
+      overflow-x: hidden;
     }
 
     /* === NAV === */
     nav {
-      height: 71px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 40px;
-      background: #fff;
+      padding: 0 48px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
     }
     .nav-brand {
       display: flex;
       align-items: center;
       gap: 10px;
       text-decoration: none;
-      color: #323282;
+      color: #fff;
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
     }
-    .nav-brand img { height: 36px; }
-    .nav-links { display: flex; gap: 28px; }
+    .nav-logo {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #FBDB5B, #f5a623);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 12px; color: #000;
+    }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
     .nav-links a {
-      color: #323282;
+      color: rgba(255,255,255,0.7);
       text-decoration: none;
       font-weight: 500;
-      font-size: 14px;
-      transition: opacity 0.15s;
+      font-size: 13px;
+      transition: color 0.2s;
     }
-    .nav-links a:hover { opacity: 0.7; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      background: #FBDB5B !important;
+      color: #000 !important;
+      padding: 8px 20px;
+      border-radius: 6px;
+      font-weight: 600 !important;
+      font-size: 12px !important;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(251,219,91,0.3); }
 
     /* === HERO === */
     .hero {
-      background: #000;
-      padding: 100px 40px;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       text-align: center;
+      padding: 120px 40px 80px;
       position: relative;
       overflow: hidden;
-    }
-    .hero::before, .hero::after {
-      content: '';
-      position: absolute;
-      border-radius: 50%;
-      border: 3px solid;
-      opacity: 0.15;
-    }
-    .hero::before {
-      width: 500px; height: 500px;
-      top: -150px; left: -100px;
-      border-color: #FBDB5B;
-    }
-    .hero::after {
-      width: 400px; height: 400px;
-      bottom: -120px; right: -80px;
-      border-color: #6EA4C3;
-    }
-    .hero h1 {
-      font-size: 42px;
-      font-weight: 100;
-      color: #fff;
-      margin-bottom: 8px;
-      position: relative;
-    }
-    .hero h1 strong {
-      font-weight: 700;
-    }
-    .hero p {
-      color: #B7B7B7;
-      font-size: 18px;
-      font-weight: 400;
-      margin-bottom: 40px;
-      position: relative;
-    }
-    .hero-buttons {
-      display: flex;
-      justify-content: center;
-      gap: 16px;
-      position: relative;
+      background: radial-gradient(ellipse at 20% 50%, rgba(50,50,130,0.15) 0%, transparent 60%),
+                  radial-gradient(ellipse at 80% 50%, rgba(110,164,195,0.1) 0%, transparent 60%),
+                  #000;
     }
 
-    /* === BUTTONS === */
-    .btn {
+    /* Animated color orbs */
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      animation: float 8s ease-in-out infinite;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: #FBDB5B;
+      top: -100px; left: -50px;
+      animation-delay: 0s;
+    }
+    .orb-2 {
+      width: 350px; height: 350px;
+      background: #6EA4C3;
+      bottom: -80px; right: -50px;
+      animation-delay: -3s;
+    }
+    .orb-3 {
+      width: 250px; height: 250px;
+      background: #323282;
+      top: 30%; right: 15%;
+      animation-delay: -5s;
+      opacity: 0.25;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -20px) scale(1.05); }
+      66% { transform: translate(-20px, 15px) scale(0.95); }
+    }
+
+    .hero-content { position: relative; z-index: 2; max-width: 700px; }
+
+    .hero-badge {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 14px 36px;
-      border-radius: 4px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: 14px;
+      background: rgba(251,219,91,0.1);
+      border: 1px solid rgba(251,219,91,0.2);
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 12px;
       font-weight: 500;
+      color: #FBDB5B;
+      margin-bottom: 32px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 100;
+      color: #fff;
+      line-height: 1.15;
+      margin-bottom: 20px;
+    }
+    .hero h1 strong { font-weight: 800; }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, #FBDB5B, #f5a623);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      color: rgba(255,255,255,0.5);
+      font-size: 18px;
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 48px;
+    }
+
+    .hero-buttons { display: flex; justify-content: center; gap: 16px; }
+
+    .btn-hero-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 40px;
+      background: #FBDB5B;
+      color: #000;
+      border: none; border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px; font-weight: 600;
       text-decoration: none;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      transition: all 0.15s;
       cursor: pointer;
-      border: none;
+      transition: all 0.25s;
+      box-shadow: 0 4px 24px rgba(251,219,91,0.25);
     }
-    .btn-primary {
-      background: #FBDB5B;
-      color: #000;
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 40px rgba(251,219,91,0.35);
     }
-    .btn-primary:hover { background: #f5d040; }
-    .btn-secondary {
-      background: #6EA4C3;
+    .btn-hero-primary svg { width: 18px; height: 18px; }
+
+    .btn-hero-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 40px;
+      background: rgba(255,255,255,0.06);
       color: #fff;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px; font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.25s;
     }
-    .btn-secondary:hover { background: #5a93b5; }
+    .btn-hero-secondary:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .hero-version {
+      margin-top: 24px;
+      color: rgba(255,255,255,0.25);
+      font-size: 12px;
+    }
+
+    /* === COLOR STRIP animated === */
+    .color-strip {
+      display: flex;
+      height: 6px;
+      overflow: hidden;
+    }
+    .color-strip div {
+      flex: 1;
+      animation: shimmer 3s ease-in-out infinite;
+    }
+    .color-strip div:nth-child(1) { background: #FBDB5B; animation-delay: 0s; }
+    .color-strip div:nth-child(2) { background: #6EA4C3; animation-delay: 0.2s; }
+    .color-strip div:nth-child(3) { background: #323282; animation-delay: 0.4s; }
+    .color-strip div:nth-child(4) { background: #A6D2E6; animation-delay: 0.6s; }
+    .color-strip div:nth-child(5) { background: #f5a623; animation-delay: 0.8s; }
+    .color-strip div:nth-child(6) { background: #E8443A; animation-delay: 1s; }
+    @keyframes shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
 
     /* === FEATURES === */
     .features {
-      padding: 80px 40px;
-      max-width: 1000px;
+      padding: 100px 40px;
+      background: #fff;
+    }
+    .features-inner {
+      max-width: 1100px;
       margin: 0 auto;
     }
-    .features h2 {
-      font-size: 32px;
-      font-weight: 500;
+    .section-label {
+      text-transform: uppercase;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: #6EA4C3;
       text-align: center;
-      margin-bottom: 48px;
+      margin-bottom: 12px;
+    }
+    .features h2 {
+      font-size: 36px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 60px;
       color: #232323;
     }
     .features-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 32px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
     }
     .feature-card {
-      padding: 28px;
-      border-radius: 4px;
-      border: 1px solid #D6D5D5;
-      transition: box-shadow 0.2s;
+      padding: 32px;
+      border-radius: 12px;
+      border: 1px solid #eee;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--card-color), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
     }
     .feature-card:hover {
-      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      border-color: transparent;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.08);
+      transform: translateY(-4px);
     }
+    .feature-card:hover::before { opacity: 1; }
+
     .feature-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 4px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      font-size: 22px;
+      width: 52px; height: 52px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
     }
+    .feature-icon svg { width: 26px; height: 26px; }
     .feature-card h3 {
       font-size: 16px;
       font-weight: 600;
       margin-bottom: 8px;
-      color: #323282;
+      color: #232323;
     }
     .feature-card p {
       font-size: 14px;
       color: #757575;
-      line-height: 1.6;
+      line-height: 1.7;
     }
 
-    /* === HOW TO === */
-    .howto {
-      background: #000;
-      padding: 80px 40px;
+    /* === DEMO PREVIEW === */
+    .demo {
+      padding: 100px 40px;
+      background: linear-gradient(180deg, #fff 0%, #f7f8fa 100%);
       text-align: center;
     }
-    .howto h2 {
-      font-size: 32px;
-      font-weight: 500;
-      color: #fff;
+    .demo h2 {
+      font-size: 36px; font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .demo-sub {
+      color: #757575; font-size: 16px;
       margin-bottom: 48px;
     }
-    .steps {
-      display: flex;
-      justify-content: center;
-      gap: 48px;
+    .demo-window {
       max-width: 800px;
       margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.12);
+      overflow: hidden;
+      border: 1px solid #e5e5e5;
     }
-    .step {
-      flex: 1;
-      text-align: center;
-    }
-    .step-number {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: #FBDB5B;
-      color: #000;
-      font-weight: 700;
-      font-size: 20px;
+    .demo-titlebar {
+      height: 36px;
+      background: #f5f5f7;
+      border-bottom: 1px solid #e5e5e5;
       display: flex;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
+      padding: 0 14px;
+      gap: 8px;
     }
-    .step h3 {
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
+    .demo-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .demo-body {
+      padding: 32px;
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    .demo-color-block {
+      width: 120px; height: 120px;
+      border-radius: 12px;
+      background: #E8443A;
+      flex-shrink: 0;
+      box-shadow: 0 4px 20px rgba(232,68,58,0.3);
+    }
+    .demo-info { text-align: left; flex: 1; }
+    .demo-hex {
+      font-size: 28px; font-weight: 700;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      color: #232323;
       margin-bottom: 8px;
     }
-    .step p {
-      color: #939393;
-      font-size: 14px;
-      line-height: 1.5;
+    .demo-values {
+      font-size: 13px; color: #939393;
+      font-family: 'Cascadia Code', monospace;
+      line-height: 2;
+    }
+    .demo-palette {
+      display: flex; gap: 8px;
+      margin-top: 16px;
+    }
+    .demo-swatch {
+      width: 40px; height: 40px;
+      border-radius: 8px;
+      transition: transform 0.2s;
+    }
+    .demo-swatch:hover { transform: scale(1.15); }
+
+    /* === STEPS === */
+    .steps-section {
+      padding: 100px 40px;
+      background: #000;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .steps-section::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, rgba(251,219,91,0.06) 0%, transparent 70%);
+      top: -200px; left: 50%;
+      transform: translateX(-50%);
+    }
+    .steps-section .section-label { color: #FBDB5B; }
+    .steps-section h2 {
+      font-size: 36px; font-weight: 700;
+      color: #fff; margin-bottom: 60px;
+      position: relative;
+    }
+    .steps-row {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .step-card {
+      flex: 1;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 40px 28px;
+      transition: all 0.3s;
+    }
+    .step-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(251,219,91,0.2);
+      transform: translateY(-4px);
+    }
+    .step-num {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FBDB5B, #f5a623);
+      color: #000;
+      font-weight: 800; font-size: 22px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 20px rgba(251,219,91,0.25);
+    }
+    .step-card h3 {
+      color: #fff; font-size: 18px;
+      font-weight: 600; margin-bottom: 10px;
+    }
+    .step-card p {
+      color: rgba(255,255,255,0.45);
+      font-size: 14px; line-height: 1.6;
     }
 
     /* === CTA === */
     .cta {
-      background: #A7C9DB;
-      padding: 60px 40px;
+      padding: 100px 40px;
+      background: linear-gradient(135deg, #323282 0%, #1a1a50 100%);
       text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta::before, .cta::after {
+      content: '';
+      position: absolute; border-radius: 50%;
+      filter: blur(80px); opacity: 0.15;
+    }
+    .cta::before {
+      width: 300px; height: 300px;
+      background: #FBDB5B;
+      top: -100px; right: 10%;
+    }
+    .cta::after {
+      width: 250px; height: 250px;
+      background: #6EA4C3;
+      bottom: -80px; left: 10%;
     }
     .cta h2 {
-      font-size: 28px;
-      font-weight: 500;
-      color: #232323;
-      margin-bottom: 8px;
+      font-size: 40px; font-weight: 700;
+      color: #fff; margin-bottom: 12px;
+      position: relative;
     }
     .cta p {
-      color: #757575;
-      font-size: 16px;
-      margin-bottom: 28px;
+      color: rgba(255,255,255,0.5);
+      font-size: 18px; font-weight: 300;
+      margin-bottom: 40px;
+      position: relative;
     }
+    .cta .btn-hero-primary { position: relative; }
 
     /* === FOOTER === */
     footer {
-      background: #fff;
+      background: #000;
       padding: 32px 40px;
       text-align: center;
-      border-top: 1px solid #D6D5D5;
+      border-top: 1px solid rgba(255,255,255,0.06);
     }
     footer p {
-      color: #939393;
+      color: rgba(255,255,255,0.3);
       font-size: 12px;
-      text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-    footer a {
-      color: #757575;
-      text-decoration: none;
-    }
-    footer a:hover { color: #323282; }
+    footer a { color: rgba(255,255,255,0.5); text-decoration: none; }
+    footer a:hover { color: #FBDB5B; }
 
     /* === RESPONSIVE === */
-    @media (max-width: 640px) {
-      .hero h1 { font-size: 28px; }
-      .hero p { font-size: 15px; }
-      .hero-buttons { flex-direction: column; align-items: center; }
-      .steps { flex-direction: column; gap: 32px; }
+    @media (max-width: 768px) {
       nav { padding: 0 20px; }
-      .features, .howto, .cta { padding: 60px 20px; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .hero h1 { font-size: 34px; }
+      .hero-sub { font-size: 15px; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .features-grid { grid-template-columns: 1fr; }
+      .steps-row { flex-direction: column; gap: 20px; }
+      .demo-body { flex-direction: column; align-items: center; }
+      .cta h2 { font-size: 28px; }
     }
   </style>
 </head>
@@ -269,82 +500,150 @@
 
   <!-- Nav -->
   <nav>
-    <a href="https://namasdata.com" class="nav-brand" target="_blank">
-      <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#323282"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="#FBDB5B" font-family="Montserrat" font-weight="700" font-size="14">NC</text></svg>
+    <a href="#" class="nav-brand">
+      <div class="nav-logo">NC</div>
       NamasColor
     </a>
     <div class="nav-links">
       <a href="#features">Funcionalidades</a>
       <a href="#install">Instalacion</a>
       <a href="https://github.com/aleayafer/namascolor" target="_blank">GitHub</a>
+      <a href="https://github.com/aleayafer/namascolor/releases/latest" class="nav-cta">Descargar</a>
     </div>
   </nav>
 
   <!-- Hero -->
   <section class="hero">
-    <h1>El <strong>Color Picker</strong> para Power BI</h1>
-    <p>Captura colores, genera paletas, verifica contraste y exporta temas. Gratis.</p>
-    <div class="hero-buttons">
-      <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn btn-primary">Descargar gratis</a>
-      <a href="https://github.com/aleayafer/namascolor" class="btn btn-secondary" target="_blank">Ver en GitHub</a>
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+    <div class="hero-content">
+      <div class="hero-badge">&#9733; HERRAMIENTA GRATUITA PARA POWER BI</div>
+      <h1>El <span class="highlight">Color Picker</span><br>que Power BI necesitaba</h1>
+      <p class="hero-sub">Captura colores de pantalla, genera armonias y degradados,<br>verifica contraste WCAG y exporta temas .json en un click.</p>
+      <div class="hero-buttons">
+        <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn-hero-primary">
+          <svg viewBox="0 0 20 20" fill="currentColor"><path d="M10 1a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 12.586V2a1 1 0 011-1z"/><path d="M3 16a1 1 0 011 1h12a1 1 0 110 2H4a1 1 0 01-1-1v0a1 1 0 010 0z"/></svg>
+          Descargar gratis
+        </a>
+        <a href="https://github.com/aleayafer/namascolor" class="btn-hero-secondary" target="_blank">
+          Ver en GitHub
+        </a>
+      </div>
+      <p class="hero-version">v1.0.0 &middot; Windows &middot; 78 MB</p>
     </div>
   </section>
+
+  <!-- Color strip -->
+  <div class="color-strip">
+    <div></div><div></div><div></div><div></div><div></div><div></div>
+  </div>
 
   <!-- Features -->
   <section class="features" id="features">
-    <h2>Todo lo que necesitas para el color en Power BI</h2>
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(251,219,91,0.15)">&#127912;</div>
-        <h3>Screen Color Picker</h3>
-        <p>Captura cualquier color de tu pantalla con un magnificador zoom 8x. Click y listo.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(110,164,195,0.15)">&#127913;</div>
-        <h3>Armonias de color</h3>
-        <p>Complementario, analogos, triadico y split-complementario. Genera combinaciones perfectas.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(50,50,130,0.1)">&#9998;</div>
-        <h3>Degradados</h3>
-        <p>Genera de 2 a 20 pasos entre dos colores con interpolacion suave en HSL.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(52,199,89,0.12)">&#9989;</div>
-        <h3>Contraste WCAG</h3>
-        <p>Verifica accesibilidad al instante. Badges AA y AAA para texto normal y grande.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(251,219,91,0.15)">&#127912;</div>
-        <h3>Paletas predefinidas</h3>
-        <p>6 paletas profesionales incluidas. Click en cualquier color para usarlo.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon" style="background:rgba(110,164,195,0.15)">&#128190;</div>
-        <h3>Export tema Power BI</h3>
-        <p>Genera un .json importable directamente en Power BI Desktop. Un click.</p>
+    <div class="features-inner">
+      <p class="section-label">Funcionalidades</p>
+      <h2>Todo lo que necesitas para el color</h2>
+      <div class="features-grid">
+        <div class="feature-card" style="--card-color: #FBDB5B">
+          <div class="feature-icon" style="background:rgba(251,219,91,0.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#FBDB5B" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2.5" fill="#FBDB5B" stroke="none"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+          </div>
+          <h3>Screen Color Picker</h3>
+          <p>Captura cualquier color de tu pantalla con magnificador zoom 8x y grid de precision.</p>
+        </div>
+        <div class="feature-card" style="--card-color: #6EA4C3">
+          <div class="feature-icon" style="background:rgba(110,164,195,0.12)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6EA4C3" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 010 18"/><line x1="12" y1="3" x2="12" y2="21"/><path d="M3.6 9h16.8M3.6 15h16.8"/></svg>
+          </div>
+          <h3>Armonias de color</h3>
+          <p>Complementario, analogos, triadico y split-complementario generados automaticamente.</p>
+        </div>
+        <div class="feature-card" style="--card-color: #323282">
+          <div class="feature-icon" style="background:rgba(50,50,130,0.08)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#323282" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="2"/><rect x="14" y="3" width="7" height="18" rx="2"/><path d="M6.5 8v8M17.5 8v8" stroke-dasharray="2 2"/></svg>
+          </div>
+          <h3>Degradados</h3>
+          <p>De 2 a 20 pasos entre dos colores con interpolacion HSL. Cada paso es clicable.</p>
+        </div>
+        <div class="feature-card" style="--card-color: #34c759">
+          <div class="feature-icon" style="background:rgba(52,199,89,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#34c759" stroke-width="2"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+          </div>
+          <h3>Contraste WCAG</h3>
+          <p>Ratio exacto con badges Pass/Fail para AA y AAA. Texto normal y grande.</p>
+        </div>
+        <div class="feature-card" style="--card-color: #f5a623">
+          <div class="feature-icon" style="background:rgba(245,166,35,0.1)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#f5a623" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><rect x="6" y="6" width="4" height="4" rx="1"/><rect x="14" y="6" width="4" height="4" rx="1"/><rect x="6" y="14" width="4" height="4" rx="1"/><rect x="14" y="14" width="4" height="4" rx="1"/></svg>
+          </div>
+          <h3>6 paletas profesionales</h3>
+          <p>Corporate Blue, Sunset Warm, Nature Earth, Power BI Default, NamasData y mas.</p>
+        </div>
+        <div class="feature-card" style="--card-color: #A6D2E6">
+          <div class="feature-icon" style="background:rgba(166,210,230,0.15)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#6EA4C3" stroke-width="2"><path d="M14 3v4a1 1 0 001 1h4"/><path d="M17 21H7a2 2 0 01-2-2V5a2 2 0 012-2h7l5 5v11a2 2 0 01-2 2z"/><path d="M9 15l2 2 4-4"/></svg>
+          </div>
+          <h3>Export tema Power BI</h3>
+          <p>Genera un .json importable directamente en Power BI Desktop. Listo para usar.</p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- How to install -->
-  <section class="howto" id="install">
-    <h2>Instalacion en 3 pasos</h2>
-    <div class="steps">
-      <div class="step">
-        <div class="step-number">1</div>
+  <!-- Demo Preview -->
+  <section class="demo">
+    <p class="section-label" style="color: #323282">Vista previa</p>
+    <h2>Asi se ve NamasColor</h2>
+    <p class="demo-sub">Interfaz limpia y minimalista. Todo a un click.</p>
+    <div class="demo-window">
+      <div class="demo-titlebar">
+        <div class="demo-dot" style="background:#ff5f57"></div>
+        <div class="demo-dot" style="background:#febc2e"></div>
+        <div class="demo-dot" style="background:#28c840"></div>
+      </div>
+      <div class="demo-body">
+        <div class="demo-color-block"></div>
+        <div class="demo-info">
+          <div class="demo-hex">#E8443A</div>
+          <div class="demo-values">
+            RGB&nbsp;&nbsp; 232, 68, 58<br>
+            HSL&nbsp;&nbsp; 3, 78%, 57%
+          </div>
+          <div class="demo-palette">
+            <div class="demo-swatch" style="background:#E8443A"></div>
+            <div class="demo-swatch" style="background:#3AE8E2"></div>
+            <div class="demo-swatch" style="background:#C93A30"></div>
+            <div class="demo-swatch" style="background:#E87A3A"></div>
+            <div class="demo-swatch" style="background:#3AE87A"></div>
+            <div class="demo-swatch" style="background:#3A70E8"></div>
+            <div class="demo-swatch" style="background:#E83AA0"></div>
+            <div class="demo-swatch" style="background:#FBDB5B"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Steps -->
+  <section class="steps-section" id="install">
+    <p class="section-label">Instalacion</p>
+    <h2>Listo en 60 segundos</h2>
+    <div class="steps-row">
+      <div class="step-card">
+        <div class="step-num">1</div>
         <h3>Descarga</h3>
-        <p>Descarga el instalador desde el boton de arriba. Son 78 MB.</p>
+        <p>Pulsa el boton de descarga. Son 78 MB. No necesitas cuenta ni registro.</p>
       </div>
-      <div class="step">
-        <div class="step-number">2</div>
+      <div class="step-card">
+        <div class="step-num">2</div>
         <h3>Instala</h3>
-        <p>Ejecuta el instalador. Windows te pedira permiso — dale a Si.</p>
+        <p>Ejecuta el instalador. Windows pedira permiso de administrador — acepta.</p>
       </div>
-      <div class="step">
-        <div class="step-number">3</div>
+      <div class="step-card">
+        <div class="step-num">3</div>
         <h3>Abre Power BI</h3>
-        <p>NamasColor aparece automaticamente en la pestana External Tools.</p>
+        <p>NamasColor aparece automaticamente en la pestana External Tools. Listo.</p>
       </div>
     </div>
   </section>
@@ -352,13 +651,16 @@
   <!-- CTA -->
   <section class="cta">
     <h2>Empieza a usar NamasColor</h2>
-    <p>Herramienta gratuita para estudiantes de NamasData</p>
-    <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn btn-primary">Descargar gratis</a>
+    <p>Herramienta gratuita by NamasData</p>
+    <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn-hero-primary">
+      <svg viewBox="0 0 20 20" fill="currentColor" width="18" height="18"><path d="M10 1a1 1 0 011 1v10.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 12.586V2a1 1 0 011-1z"/><path d="M3 16a1 1 0 011 1h12a1 1 0 110 2H4a1 1 0 01-1-1v0a1 1 0 010 0z"/></svg>
+      Descargar gratis
+    </a>
   </section>
 
   <!-- Footer -->
   <footer>
-    <p>NamasColor &copy; 2026 <a href="https://namasdata.com" target="_blank">NamasData</a></p>
+    <p>NamasColor &copy; 2026 &middot; <a href="https://namasdata.com" target="_blank">NamasData</a></p>
   </footer>
 
 </body>

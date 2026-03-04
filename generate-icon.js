@@ -5,18 +5,7 @@ const zlib = require('zlib');
 const S = 256;
 const rawData = Buffer.alloc((S * 4 + 1) * S);
 
-// Rainbow color palette for the goat
-const colors = [
-  [232,68,58],   // red
-  [245,166,35],  // orange
-  [251,219,91],  // yellow
-  [80,200,120],  // green
-  [110,164,195], // blue
-  [50,50,130],   // indigo
-  [160,90,180],  // violet
-  [232,68,58],   // red again
-];
-
+// --- Color helpers ---
 function hslToRgb(h, s, l) {
   h /= 360; s /= 100; l /= 100;
   let r, g, b;
@@ -38,16 +27,33 @@ function hslToRgb(h, s, l) {
   return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 
-// Get rainbow color based on y position (0-255)
+// Smooth rainbow based on vertical position
 function getRainbow(y) {
-  const hue = (y / S) * 360;
-  return hslToRgb(hue, 85, 55);
+  const t = Math.max(0, Math.min(1, (y - 30) / (S - 60)));
+  const hue = t * 300; // red → violet
+  return hslToRgb(hue, 80, 58);
 }
 
+// Darker version for outlines
+function getRainbowDark(y) {
+  const t = Math.max(0, Math.min(1, (y - 30) / (S - 60)));
+  const hue = t * 300;
+  return hslToRgb(hue, 70, 35);
+}
+
+// --- Drawing primitives ---
 function setPixel(x, y, r, g, b, a = 255) {
+  x = Math.round(x); y = Math.round(y);
   if (x < 0 || x >= S || y < 0 || y >= S) return;
   const off = y * (S * 4 + 1) + 1 + x * 4;
   rawData[off] = r; rawData[off+1] = g; rawData[off+2] = b; rawData[off+3] = a;
+}
+
+function getPixel(x, y) {
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || x >= S || y < 0 || y >= S) return [0,0,0,0];
+  const off = y * (S * 4 + 1) + 1 + x * 4;
+  return [rawData[off], rawData[off+1], rawData[off+2], rawData[off+3]];
 }
 
 function fillCircle(cx, cy, radius, r, g, b) {
@@ -60,7 +66,17 @@ function fillCircle(cx, cy, radius, r, g, b) {
   }
 }
 
-function fillEllipse(cx, cy, rx, ry, colorFn) {
+function fillEllipse(cx, cy, rx, ry, r, g, b) {
+  for (let dy = -ry; dy <= ry; dy++) {
+    for (let dx = -rx; dx <= rx; dx++) {
+      if ((dx*dx)/(rx*rx) + (dy*dy)/(ry*ry) <= 1) {
+        setPixel(cx+dx, cy+dy, r, g, b);
+      }
+    }
+  }
+}
+
+function fillEllipseGradient(cx, cy, rx, ry, colorFn) {
   for (let dy = -ry; dy <= ry; dy++) {
     for (let dx = -rx; dx <= rx; dx++) {
       if ((dx*dx)/(rx*rx) + (dy*dy)/(ry*ry) <= 1) {
@@ -71,111 +87,269 @@ function fillEllipse(cx, cy, rx, ry, colorFn) {
   }
 }
 
-// Initialize all pixels with filter byte
+// Outlined ellipse (fill + dark border)
+function fillEllipseOutlined(cx, cy, rx, ry, colorFn, borderColorFn, borderW = 3) {
+  // Border first
+  for (let dy = -(ry+borderW); dy <= ry+borderW; dy++) {
+    for (let dx = -(rx+borderW); dx <= rx+borderW; dx++) {
+      const outer = (dx*dx)/((rx+borderW)*(rx+borderW)) + (dy*dy)/((ry+borderW)*(ry+borderW));
+      const inner = (dx*dx)/(rx*rx) + (dy*dy)/(ry*ry);
+      if (outer <= 1) {
+        if (inner > 1) {
+          const [r,g,b] = borderColorFn(cy + dy);
+          setPixel(cx+dx, cy+dy, r, g, b);
+        } else {
+          const [r,g,b] = colorFn(cy + dy);
+          setPixel(cx+dx, cy+dy, r, g, b);
+        }
+      }
+    }
+  }
+}
+
+function fillRect(x1, y1, x2, y2, r, g, b) {
+  for (let y = y1; y <= y2; y++) {
+    for (let x = x1; x <= x2; x++) {
+      setPixel(x, y, r, g, b);
+    }
+  }
+}
+
+// Anti-aliased thick line
+function drawLine(x1, y1, x2, y2, thickness, r, g, b) {
+  const dist = Math.sqrt((x2-x1)**2 + (y2-y1)**2);
+  const steps = Math.ceil(dist * 2);
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const cx = x1 + (x2 - x1) * t;
+    const cy = y1 + (y2 - y1) * t;
+    fillCircle(Math.round(cx), Math.round(cy), Math.round(thickness), r, g, b);
+  }
+}
+
+// --- Initialize filter bytes ---
 for (let y = 0; y < S; y++) {
   rawData[y * (S * 4 + 1)] = 0;
 }
 
-// === Draw rounded background ===
-const margin = 6, rad = 36;
+// === ROUNDED BACKGROUND ===
+const margin = 8, rad = 40;
 for (let y = 0; y < S; y++) {
   for (let x = 0; x < S; x++) {
     let inside = true;
     const x1 = margin, y1 = margin, x2 = S-margin, y2 = S-margin;
     if (x < x1 || x >= x2 || y < y1 || y >= y2) { inside = false; }
     else {
-      const cns = [[x1+rad,y1+rad],[x2-rad,y1+rad],[x1+rad,y2-rad],[x2-rad,y2-rad]];
-      for (const [cx,cy] of cns) {
-        const inR = (x<x1+rad&&y<y1+rad&&cx===x1+rad&&cy===y1+rad) ||
-                    (x>=x2-rad&&y<y1+rad&&cx===x2-rad&&cy===y1+rad) ||
-                    (x<x1+rad&&y>=y2-rad&&cx===x1+rad&&cy===y2-rad) ||
-                    (x>=x2-rad&&y>=y2-rad&&cx===x2-rad&&cy===y2-rad);
-        if (inR) { const dx=x-cx, dy=y-cy; if(dx*dx+dy*dy>rad*rad) inside=false; break; }
+      const corners = [[x1+rad,y1+rad],[x2-rad,y1+rad],[x1+rad,y2-rad],[x2-rad,y2-rad]];
+      for (const [cx,cy] of corners) {
+        const inCorner = (x<x1+rad && y<y1+rad && cx===x1+rad && cy===y1+rad) ||
+                         (x>=x2-rad && y<y1+rad && cx===x2-rad && cy===y1+rad) ||
+                         (x<x1+rad && y>=y2-rad && cx===x1+rad && cy===y2-rad) ||
+                         (x>=x2-rad && y>=y2-rad && cx===x2-rad && cy===y2-rad);
+        if (inCorner) {
+          const dx = x-cx, dy = y-cy;
+          if (dx*dx + dy*dy > rad*rad) inside = false;
+          break;
+        }
       }
     }
-    if (inside) setPixel(x, y, 35, 35, 55);
+    if (inside) {
+      // Subtle gradient background (slightly lighter at top)
+      const bgL = 22 + (y / S) * 3;
+      setPixel(x, y, bgL, bgL, bgL + 12);
+    }
   }
 }
 
-// === GOAT HEAD — stylized, facing left ===
+// === GOAT HEAD — front-facing, centered ===
+const CX = 128, CY = 142; // center of head
 
-// Head (main oval) — rainbow colored
-fillEllipse(128, 138, 62, 68, getRainbow);
+// --- HORNS (behind head, drawn first) ---
+// Left horn — curves up and left
+for (let t = 0; t < 60; t++) {
+  const p = t / 60;
+  const hx = CX - 42 - p * 32 - Math.sin(p * Math.PI) * 18;
+  const hy = CY - 55 - p * 52;
+  const thickness = 11 - p * 7;
+  const [r,g,b] = getRainbow(hy + 50);
+  fillCircle(Math.round(hx), Math.round(hy), Math.max(2, Math.round(thickness)), r, g, b);
+}
+// Right horn — mirrors left
+for (let t = 0; t < 60; t++) {
+  const p = t / 60;
+  const hx = CX + 42 + p * 32 + Math.sin(p * Math.PI) * 18;
+  const hy = CY - 55 - p * 52;
+  const thickness = 11 - p * 7;
+  const [r,g,b] = getRainbow(hy + 50);
+  fillCircle(Math.round(hx), Math.round(hy), Math.max(2, Math.round(thickness)), r, g, b);
+}
 
-// Snout (lower, slightly forward)
-fillEllipse(108, 178, 32, 24, getRainbow);
-
-// Beard (triangular strands below chin)
-for (let i = 0; i < 30; i++) {
-  const bx = 108 + Math.sin(i * 0.3) * 12;
-  const by = 200 + i;
-  const bw = Math.max(2, 14 - i * 0.4);
-  for (let dx = -bw; dx <= bw; dx++) {
-    const [r,g,b] = getRainbow(by);
-    setPixel(Math.round(bx+dx), by, r, g, b);
+// --- EARS (behind head) ---
+// Left ear — tilted outward
+for (let dy = -24; dy <= 24; dy++) {
+  for (let dx = -15; dx <= 15; dx++) {
+    const rot = dx * 0.85 + dy * 0.53;
+    const rot2 = -dx * 0.53 + dy * 0.85;
+    if ((rot*rot)/(15*15) + (rot2*rot2)/(24*24) <= 1) {
+      const px = CX - 62 + dx;
+      const py = CY - 18 + dy;
+      const [r,g,b] = getRainbow(py);
+      setPixel(px, py, r, g, b);
+    }
   }
 }
-
-// Left horn (curved up and back)
-for (let t = 0; t < 50; t++) {
-  const progress = t / 50;
-  const hx = 90 - progress * 30 + Math.sin(progress * 2.5) * 15;
-  const hy = 85 - progress * 50;
-  const thickness = 10 - progress * 5;
-  const [r,g,b] = getRainbow(hy + 60);
-  fillCircle(Math.round(hx), Math.round(hy), Math.max(2, Math.round(thickness)), r, g, b);
+// Inner ear (pink)
+for (let dy = -14; dy <= 14; dy++) {
+  for (let dx = -8; dx <= 8; dx++) {
+    const rot = dx * 0.85 + dy * 0.53;
+    const rot2 = -dx * 0.53 + dy * 0.85;
+    if ((rot*rot)/(8*8) + (rot2*rot2)/(14*14) <= 1) {
+      const px = CX - 62 + dx;
+      const py = CY - 18 + dy;
+      setPixel(px, py, 210, 140, 155);
+    }
+  }
 }
-
-// Right horn (curved up and forward)
-for (let t = 0; t < 50; t++) {
-  const progress = t / 50;
-  const hx = 160 + progress * 25 + Math.sin(progress * 2.5) * 12;
-  const hy = 85 - progress * 48;
-  const thickness = 10 - progress * 5;
-  const [r,g,b] = getRainbow(hy + 60);
-  fillCircle(Math.round(hx), Math.round(hy), Math.max(2, Math.round(thickness)), r, g, b);
-}
-
-// Left ear
-fillEllipse(78, 100, 14, 22, (y) => getRainbow(y - 20));
-
 // Right ear
-fillEllipse(175, 100, 14, 22, (y) => getRainbow(y - 20));
-
-// Eye (white with dark pupil)
-fillCircle(110, 125, 12, 255, 255, 255);
-fillCircle(108, 125, 6, 30, 30, 50);
-fillCircle(106, 123, 2, 255, 255, 255); // eye highlight
-
-// Nose dots
-fillCircle(95, 175, 4, 50, 40, 60);
-fillCircle(115, 175, 4, 50, 40, 60);
-
-// Mouth line
-for (let dx = -18; dx <= 18; dx++) {
-  const mx = 105 + dx;
-  const my = 188 + Math.abs(dx) * 0.15;
-  setPixel(mx, Math.round(my), 50, 40, 60);
-  setPixel(mx, Math.round(my)+1, 50, 40, 60);
+for (let dy = -24; dy <= 24; dy++) {
+  for (let dx = -15; dx <= 15; dx++) {
+    const rot = dx * 0.85 - dy * 0.53;
+    const rot2 = dx * 0.53 + dy * 0.85;
+    if ((rot*rot)/(15*15) + (rot2*rot2)/(24*24) <= 1) {
+      const px = CX + 62 + dx;
+      const py = CY - 18 + dy;
+      const [r,g,b] = getRainbow(py);
+      setPixel(px, py, r, g, b);
+    }
+  }
 }
-
-// === Add sparkle/color dots around the goat ===
-const sparkles = [
-  [42, 50, [232,68,58]], [210, 45, [251,219,91]], [220, 140, [80,200,120]],
-  [38, 170, [110,164,195]], [195, 210, [245,166,35]], [50, 220, [160,90,180]],
-  [180, 55, [232,68,58]], [55, 100, [251,219,91]],
-];
-for (const [sx, sy, [r,g,b]] of sparkles) {
-  fillCircle(sx, sy, 5, r, g, b);
-  // 4-point star
-  for (let d = 1; d <= 8; d++) {
-    const a = Math.max(255 - d * 30, 80);
-    setPixel(sx+d, sy, r, g, b); setPixel(sx-d, sy, r, g, b);
-    setPixel(sx, sy+d, r, g, b); setPixel(sx, sy-d, r, g, b);
+// Inner right ear (pink)
+for (let dy = -14; dy <= 14; dy++) {
+  for (let dx = -8; dx <= 8; dx++) {
+    const rot = dx * 0.85 - dy * 0.53;
+    const rot2 = dx * 0.53 + dy * 0.85;
+    if ((rot*rot)/(8*8) + (rot2*rot2)/(14*14) <= 1) {
+      const px = CX + 62 + dx;
+      const py = CY - 18 + dy;
+      setPixel(px, py, 210, 140, 155);
+    }
   }
 }
 
-// === PNG encoding ===
+// --- HEAD (main shape) ---
+// Outline
+fillEllipseOutlined(CX, CY, 56, 62, getRainbow, getRainbowDark, 3);
+
+// --- SNOUT/MUZZLE (lighter area) ---
+function getSnoutColor(y) {
+  const [r,g,b] = getRainbow(y);
+  // Lighten
+  return [Math.min(255, r + 50), Math.min(255, g + 50), Math.min(255, b + 50)];
+}
+fillEllipseGradient(CX, CY + 30, 30, 22, getSnoutColor);
+
+// --- EYES ---
+// Left eye — white sclera
+fillCircle(CX - 22, CY - 12, 14, 255, 255, 255);
+// Horizontal rectangular pupil (goat-style!)
+for (let dy = -4; dy <= 4; dy++) {
+  for (let dx = -10; dx <= 10; dx++) {
+    setPixel(CX - 22 + dx, CY - 12 + dy, 25, 25, 40);
+  }
+}
+// Iris ring (dark golden)
+for (let a = 0; a < 360; a++) {
+  const rad = a * Math.PI / 180;
+  for (let r = 9; r <= 13; r++) {
+    const px = CX - 22 + Math.cos(rad) * r;
+    const py = CY - 12 + Math.sin(rad) * r;
+    // Only color outside the pupil area
+    const dx = Math.round(px) - (CX - 22);
+    const dy = Math.round(py) - (CY - 12);
+    if (Math.abs(dx) > 9 || Math.abs(dy) > 3) {
+      setPixel(px, py, 180, 150, 50);
+    }
+  }
+}
+// Eye highlight
+fillCircle(CX - 26, CY - 16, 3, 255, 255, 255);
+
+// Right eye
+fillCircle(CX + 22, CY - 12, 14, 255, 255, 255);
+for (let dy = -4; dy <= 4; dy++) {
+  for (let dx = -10; dx <= 10; dx++) {
+    setPixel(CX + 22 + dx, CY - 12 + dy, 25, 25, 40);
+  }
+}
+for (let a = 0; a < 360; a++) {
+  const rad = a * Math.PI / 180;
+  for (let r = 9; r <= 13; r++) {
+    const px = CX + 22 + Math.cos(rad) * r;
+    const py = CY - 12 + Math.sin(rad) * r;
+    const dx = Math.round(px) - (CX + 22);
+    const dy = Math.round(py) - (CY - 12);
+    if (Math.abs(dx) > 9 || Math.abs(dy) > 3) {
+      setPixel(px, py, 180, 150, 50);
+    }
+  }
+}
+fillCircle(CX + 18, CY - 16, 3, 255, 255, 255);
+
+// --- NOSTRILS ---
+fillCircle(CX - 10, CY + 30, 4, 40, 35, 50);
+fillCircle(CX + 10, CY + 30, 4, 40, 35, 50);
+
+// --- MOUTH ---
+for (let dx = -16; dx <= 16; dx++) {
+  const mx = CX + dx;
+  const curve = Math.abs(dx) * 0.12;
+  const my = CY + 42 + curve;
+  setPixel(mx, Math.round(my), 50, 40, 55);
+  setPixel(mx, Math.round(my)+1, 50, 40, 55);
+}
+
+// --- BEARD ---
+for (let i = 0; i < 35; i++) {
+  const by = CY + 62 + i;
+  const wave = Math.sin(i * 0.25) * 4;
+  const width = Math.max(1, 16 - i * 0.42);
+  for (let dx = -width; dx <= width; dx++) {
+    const [r,g,b] = getRainbow(by);
+    setPixel(Math.round(CX + dx + wave), by, r, g, b);
+  }
+}
+// Beard tip
+for (let i = 0; i < 8; i++) {
+  const by = CY + 97 + i;
+  const width = Math.max(0, 3 - i * 0.4);
+  for (let dx = -width; dx <= width; dx++) {
+    const [r,g,b] = getRainbow(by);
+    setPixel(Math.round(CX + dx), by, r, g, b);
+  }
+}
+
+// === SPARKLES around the goat ===
+const sparkles = [
+  [38, 42],  [215, 38],  [222, 145], [35, 175],
+  [200, 215], [48, 225], [185, 50],  [52, 105],
+];
+for (const [sx, sy] of sparkles) {
+  const [cr,cg,cb] = getRainbow(sy);
+  fillCircle(sx, sy, 3, cr, cg, cb);
+  // 4-point star rays
+  for (let d = 1; d <= 7; d++) {
+    const fade = Math.max(0, 255 - d * 35);
+    const fr = Math.round(cr * fade / 255);
+    const fg = Math.round(cg * fade / 255);
+    const fb = Math.round(cb * fade / 255);
+    setPixel(sx+d, sy, fr, fg, fb);
+    setPixel(sx-d, sy, fr, fg, fb);
+    setPixel(sx, sy+d, fr, fg, fb);
+    setPixel(sx, sy-d, fr, fg, fb);
+  }
+}
+
+// === PNG ENCODING ===
 const deflated = zlib.deflateSync(rawData, { level: 9 });
 
 function crc32(buf) {
@@ -207,16 +381,26 @@ ihdr[8] = 8; ihdr[9] = 6;
 const png = Buffer.concat([sig, chunk('IHDR', ihdr), chunk('IDAT', deflated), chunk('IEND', Buffer.alloc(0))]);
 fs.writeFileSync(path.join(__dirname, 'assets', 'icon.png'), png);
 
-// ICO
+// ICO wrapper
 const icoH = Buffer.alloc(6);
 icoH.writeUInt16LE(0,0); icoH.writeUInt16LE(1,2); icoH.writeUInt16LE(1,4);
 const icoE = Buffer.alloc(16);
-icoE[0] = 0; icoE[1] = 0;
-icoE[2] = 0; icoE[3] = 0;
+icoE[0] = 0; icoE[1] = 0; icoE[2] = 0; icoE[3] = 0;
 icoE.writeUInt16LE(1,4); icoE.writeUInt16LE(32,6);
 icoE.writeUInt32LE(png.length,8); icoE.writeUInt32LE(22,12);
 const ico = Buffer.concat([icoH, icoE, png]);
 fs.writeFileSync(path.join(__dirname, 'assets', 'icon.ico'), ico);
 
+// pbitool.json with icon embedded (correct format for Power BI)
+const pbitool = {
+  version: "1.0.0",
+  name: "NamasColor",
+  description: "Color Picker para Power BI",
+  path: "C:\\Program Files\\NamasColor\\NamasColor.exe",
+  iconData: "image/png;base64," + png.toString('base64')
+};
+fs.writeFileSync(path.join(__dirname, 'assets', 'namascolor.pbitool.json'), JSON.stringify(pbitool, null, 2));
+
 console.log(`icon.png: ${png.length} bytes (${S}x${S})`);
 console.log(`icon.ico: ${ico.length} bytes`);
+console.log(`namascolor.pbitool.json: updated with embedded PNG icon`);

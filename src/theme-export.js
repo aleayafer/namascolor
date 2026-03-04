@@ -41,6 +41,7 @@ function generatePowerBITheme(name, colors, options = {}) {
   const pageBg = isDark ? '#121212' : '#F5F5F5';
 
   const visualBg = resolveVisualBg(bgVisuals, isDark);
+  const visualBgTransparent = bgVisuals === 'transparent';
 
   // --- Border ---
   const border = buildBorder(borderStyle, c[0], isDark);
@@ -90,7 +91,7 @@ function generatePowerBITheme(name, colors, options = {}) {
     visualStyles: buildVisualStyles({
       font, foreground, foregroundSecondary, foregroundTertiary,
       background, backgroundLight, backgroundNeutral,
-      visualBg, pageBg, border, cornerRadius, shadow,
+      visualBg, visualBgTransparent, pageBg, border, cornerRadius, shadow,
       primary: c[0], isDark, alternateRows
     })
   };
@@ -103,13 +104,13 @@ function resolveVisualBg(preset, isDark) {
   if (isDark) {
     switch (preset) {
       case 'offwhite': return '#2A2A2A';
-      case 'transparent': return 'transparent';
+      case 'transparent': return '#000000';
       default: return '#1E1E1E';
     }
   }
   switch (preset) {
     case 'offwhite': return '#FAFAFA';
-    case 'transparent': return 'transparent';
+    case 'transparent': return '#FFFFFF';
     default: return '#FFFFFF';
   }
 }
@@ -131,7 +132,7 @@ function buildBorder(style, primary, isDark) {
     case 'corporate':
       return { show: true, color: primary, weight: 1 };
     default:
-      return { show: false, color: 'transparent', weight: 0 };
+      return { show: false, color: '#FFFFFF', weight: 0 };
   }
 }
 
@@ -157,7 +158,7 @@ function buildVisualStyles(cfg) {
   // --- Wildcard: applies to all visuals ---
   vs['*'] = {
     '*': {
-      background: [{ color: solid(cfg.visualBg), transparency: cfg.visualBg === 'transparent' ? 100 : 0 }],
+      background: [{ color: solid(cfg.visualBg), transparency: cfg.visualBgTransparent ? 100 : 0 }],
       border: [{
         show: cfg.border.show,
         color: solid(cfg.border.color),
@@ -221,7 +222,7 @@ function buildVisualStyles(cfg) {
         fontFamily: cfg.font,
         fontSize: 11,
         color: solid(cfg.foreground),
-        backColor: solid(cfg.visualBg === 'transparent' ? (cfg.isDark ? '#1E1E1E' : '#FFFFFF') : cfg.visualBg)
+        backColor: solid(cfg.visualBg)
       }],
       columnHeaders: [{
         fontFamily: cfg.font,
@@ -251,15 +252,13 @@ function buildVisualStyles(cfg) {
       items: [{
         fontFamily: cfg.font,
         fontSize: 11,
-        color: solid(cfg.foreground),
-        background: solid('transparent')
+        color: solid(cfg.foreground)
       }],
       header: [{
         fontFamily: cfg.font,
         fontSize: 11,
         bold: true,
-        color: solid(cfg.foreground),
-        background: solid('transparent')
+        color: solid(cfg.foreground)
       }]
     }
   };

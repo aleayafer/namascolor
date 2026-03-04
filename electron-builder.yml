@@ -11,6 +11,10 @@ files:
   - src/**/*
   - assets/**/*
 
+extraResources:
+  - from: assets/namascolor.pbitool.json
+    to: namascolor.pbitool.json
+
 win:
   icon: assets/icon.ico
   sign: false

@@ -39,6 +39,7 @@ function closeAllPickers() {
     if (win && !win.isDestroyed()) win.close();
   }
   pickerWindows = [];
+  if (mainWindow && !mainWindow.isDestroyed()) mainWindow.show();
 }
 
 // --- IPC: Screen Capture (legacy, kept for compat) ---
@@ -82,9 +83,10 @@ ipcMain.handle('open-picker', async () => {
     thumbnailSize: { width: maxPhysW, height: maxPhysH }
   });
 
-  mainWindow.show();
-
-  if (sources.length === 0) return null;
+  if (sources.length === 0) {
+    mainWindow.show();
+    return null;
+  }
 
   // Create one picker window per display
   for (const display of displays) {

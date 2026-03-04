@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NamasColor — Color Picker para Power BI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      color: #232323;
+      background: #ffffff;
+    }
+
+    /* === NAV === */
+    nav {
+      height: 71px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      background: #fff;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: #323282;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    .nav-brand img { height: 36px; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: #323282;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      transition: opacity 0.15s;
+    }
+    .nav-links a:hover { opacity: 0.7; }
+
+    /* === HERO === */
+    .hero {
+      background: #000;
+      padding: 100px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before, .hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid;
+      opacity: 0.15;
+    }
+    .hero::before {
+      width: 500px; height: 500px;
+      top: -150px; left: -100px;
+      border-color: #FBDB5B;
+    }
+    .hero::after {
+      width: 400px; height: 400px;
+      bottom: -120px; right: -80px;
+      border-color: #6EA4C3;
+    }
+    .hero h1 {
+      font-size: 42px;
+      font-weight: 100;
+      color: #fff;
+      margin-bottom: 8px;
+      position: relative;
+    }
+    .hero h1 strong {
+      font-weight: 700;
+    }
+    .hero p {
+      color: #B7B7B7;
+      font-size: 18px;
+      font-weight: 400;
+      margin-bottom: 40px;
+      position: relative;
+    }
+    .hero-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      position: relative;
+    }
+
+    /* === BUTTONS === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 36px;
+      border-radius: 4px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: #FBDB5B;
+      color: #000;
+    }
+    .btn-primary:hover { background: #f5d040; }
+    .btn-secondary {
+      background: #6EA4C3;
+      color: #fff;
+    }
+    .btn-secondary:hover { background: #5a93b5; }
+
+    /* === FEATURES === */
+    .features {
+      padding: 80px 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .features h2 {
+      font-size: 32px;
+      font-weight: 500;
+      text-align: center;
+      margin-bottom: 48px;
+      color: #232323;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 32px;
+    }
+    .feature-card {
+      padding: 28px;
+      border-radius: 4px;
+      border: 1px solid #D6D5D5;
+      transition: box-shadow 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+      font-size: 22px;
+    }
+    .feature-card h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #323282;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: #757575;
+      line-height: 1.6;
+    }
+
+    /* === HOW TO === */
+    .howto {
+      background: #000;
+      padding: 80px 40px;
+      text-align: center;
+    }
+    .howto h2 {
+      font-size: 32px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 48px;
+    }
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+    }
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #FBDB5B;
+      color: #000;
+      font-weight: 700;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+    .step h3 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .step p {
+      color: #939393;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* === CTA === */
+    .cta {
+      background: #A7C9DB;
+      padding: 60px 40px;
+      text-align: center;
+    }
+    .cta h2 {
+      font-size: 28px;
+      font-weight: 500;
+      color: #232323;
+      margin-bottom: 8px;
+    }
+    .cta p {
+      color: #757575;
+      font-size: 16px;
+      margin-bottom: 28px;
+    }
+
+    /* === FOOTER === */
+    footer {
+      background: #fff;
+      padding: 32px 40px;
+      text-align: center;
+      border-top: 1px solid #D6D5D5;
+    }
+    footer p {
+      color: #939393;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    footer a {
+      color: #757575;
+      text-decoration: none;
+    }
+    footer a:hover { color: #323282; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 640px) {
+      .hero h1 { font-size: 28px; }
+      .hero p { font-size: 15px; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+      .steps { flex-direction: column; gap: 32px; }
+      nav { padding: 0 20px; }
+      .features, .howto, .cta { padding: 60px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav>
+    <a href="https://namasdata.com" class="nav-brand" target="_blank">
+      <svg width="36" height="36" viewBox="0 0 36 36"><rect width="36" height="36" rx="6" fill="#323282"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" fill="#FBDB5B" font-family="Montserrat" font-weight="700" font-size="14">NC</text></svg>
+      NamasColor
+    </a>
+    <div class="nav-links">
+      <a href="#features">Funcionalidades</a>
+      <a href="#install">Instalacion</a>
+      <a href="https://github.com/aleayafer/namascolor" target="_blank">GitHub</a>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>El <strong>Color Picker</strong> para Power BI</h1>
+    <p>Captura colores, genera paletas, verifica contraste y exporta temas. Gratis.</p>
+    <div class="hero-buttons">
+      <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn btn-primary">Descargar gratis</a>
+      <a href="https://github.com/aleayafer/namascolor" class="btn btn-secondary" target="_blank">Ver en GitHub</a>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <h2>Todo lo que necesitas para el color en Power BI</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(251,219,91,0.15)">&#127912;</div>
+        <h3>Screen Color Picker</h3>
+        <p>Captura cualquier color de tu pantalla con un magnificador zoom 8x. Click y listo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(110,164,195,0.15)">&#127913;</div>
+        <h3>Armonias de color</h3>
+        <p>Complementario, analogos, triadico y split-complementario. Genera combinaciones perfectas.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(50,50,130,0.1)">&#9998;</div>
+        <h3>Degradados</h3>
+        <p>Genera de 2 a 20 pasos entre dos colores con interpolacion suave en HSL.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(52,199,89,0.12)">&#9989;</div>
+        <h3>Contraste WCAG</h3>
+        <p>Verifica accesibilidad al instante. Badges AA y AAA para texto normal y grande.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(251,219,91,0.15)">&#127912;</div>
+        <h3>Paletas predefinidas</h3>
+        <p>6 paletas profesionales incluidas. Click en cualquier color para usarlo.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon" style="background:rgba(110,164,195,0.15)">&#128190;</div>
+        <h3>Export tema Power BI</h3>
+        <p>Genera un .json importable directamente en Power BI Desktop. Un click.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How to install -->
+  <section class="howto" id="install">
+    <h2>Instalacion en 3 pasos</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Descarga</h3>
+        <p>Descarga el instalador desde el boton de arriba. Son 78 MB.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Instala</h3>
+        <p>Ejecuta el instalador. Windows te pedira permiso — dale a Si.</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Abre Power BI</h3>
+        <p>NamasColor aparece automaticamente en la pestana External Tools.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <h2>Empieza a usar NamasColor</h2>
+    <p>Herramienta gratuita para estudiantes de NamasData</p>
+    <a href="https://github.com/aleayafer/namascolor/releases/latest" class="btn btn-primary">Descargar gratis</a>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>NamasColor &copy; 2026 <a href="https://namasdata.com" target="_blank">NamasData</a></p>
+  </footer>
+
+</body>
+</html>

@@ -3,14 +3,14 @@ const path = require('path');
 const fs = require('fs');
 
 let mainWindow;
-let pickerWindow;
+let pickerWindows = [];
 
 function createMainWindow() {
   mainWindow = new BrowserWindow({
-    width: 1100,
-    height: 800,
-    minWidth: 900,
-    minHeight: 600,
+    width: 920,
+    height: 660,
+    minWidth: 760,
+    minHeight: 520,
     backgroundColor: '#f5f5f7',
     icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
@@ -32,7 +32,16 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-// --- IPC: Screen Capture ---
+// --- Close all picker windows ---
+
+function closeAllPickers() {
+  for (const win of pickerWindows) {
+    if (win && !win.isDestroyed()) win.close();
+  }
+  pickerWindows = [];
+}
+
+// --- IPC: Screen Capture (legacy, kept for compat) ---
 
 ipcMain.handle('capture-screen', async () => {
   const primaryDisplay = screen.getPrimaryDisplay();
@@ -41,7 +50,7 @@ ipcMain.handle('capture-screen', async () => {
 
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
-    thumbnailSize: { width: width * scaleFactor, height: height * scaleFactor }
+    thumbnailSize: { width: Math.round(width * scaleFactor), height: Math.round(height * scaleFactor) }
   });
 
   if (sources.length === 0) return null;
@@ -55,70 +64,86 @@ ipcMain.handle('capture-screen', async () => {
   };
 });
 
+// --- IPC: Open Picker — one window per monitor ---
+
 ipcMain.handle('open-picker', async () => {
-  const primaryDisplay = screen.getPrimaryDisplay();
-  const { width, height } = primaryDisplay.size;
+  const displays = screen.getAllDisplays();
 
-  // Hide main window briefly for clean capture
+  // Thumbnail size = largest physical resolution across displays
+  const maxPhysW = Math.round(Math.max(...displays.map(d => d.bounds.width * d.scaleFactor)));
+  const maxPhysH = Math.round(Math.max(...displays.map(d => d.bounds.height * d.scaleFactor)));
+
+  // Hide main window for clean capture
   mainWindow.hide();
+  await new Promise(r => setTimeout(r, 80));
 
-  // Small delay to let the window hide
-  await new Promise(r => setTimeout(r, 150));
-
-  const scaleFactor = primaryDisplay.scaleFactor;
   const sources = await desktopCapturer.getSources({
     types: ['screen'],
-    thumbnailSize: { width: width * scaleFactor, height: height * scaleFactor }
+    thumbnailSize: { width: maxPhysW, height: maxPhysH }
   });
 
   mainWindow.show();
 
   if (sources.length === 0) return null;
 
-  const screenshot = sources[0].thumbnail;
+  // Create one picker window per display
+  for (const display of displays) {
+    // Match source to display via display_id, fallback to index
+    const source = sources.find(s => s.display_id === display.id.toString())
+      || sources[displays.indexOf(display)];
+    if (!source) continue;
 
-  pickerWindow = new BrowserWindow({
-    fullscreen: true,
-    frame: false,
-    alwaysOnTop: true,
-    skipTaskbar: true,
-    backgroundColor: '#000000',
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
-    }
-  });
-
-  pickerWindow.loadFile(path.join(__dirname, 'src', 'picker.html'));
-
-  pickerWindow.webContents.once('did-finish-load', () => {
-    pickerWindow.webContents.send('screenshot-data', {
-      dataURL: screenshot.toDataURL(),
-      width: width,
-      height: height,
-      scaleFactor: scaleFactor
+    const win = new BrowserWindow({
+      x: display.bounds.x,
+      y: display.bounds.y,
+      width: display.bounds.width,
+      height: display.bounds.height,
+      frame: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
+      resizable: false,
+      movable: false,
+      hasShadow: false,
+      fullscreenable: false,
+      backgroundColor: '#000000',
+      webPreferences: {
+        preload: path.join(__dirname, 'preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false
+      }
     });
-  });
+
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.loadFile(path.join(__dirname, 'src', 'picker.html'));
+
+    const screenshotData = {
+      dataURL: source.thumbnail.toDataURL(),
+      width: display.bounds.width,
+      height: display.bounds.height,
+      scaleFactor: display.scaleFactor
+    };
+
+    win.webContents.once('did-finish-load', () => {
+      win.webContents.send('screenshot-data', screenshotData);
+    });
+
+    pickerWindows.push(win);
+  }
 
   return true;
 });
+
+// --- IPC: Color picked / cancel ---
 
 ipcMain.on('color-picked', (event, hex) => {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send('color-from-picker', hex);
   }
-  if (pickerWindow && !pickerWindow.isDestroyed()) {
-    pickerWindow.close();
-    pickerWindow = null;
-  }
+  closeAllPickers();
 });
 
 ipcMain.on('picker-cancel', () => {
-  if (pickerWindow && !pickerWindow.isDestroyed()) {
-    pickerWindow.close();
-    pickerWindow = null;
-  }
+  closeAllPickers();
 });
 
 // --- IPC: Save Theme File ---

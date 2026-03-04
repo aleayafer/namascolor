@@ -138,10 +138,102 @@
         </div>
       </section>
 
-      <!-- Row 5: Palettes -->
+      <!-- Row 5: Mi Tema -->
       <section class="card">
-        <h3>Paletas predefinidas</h3>
-        <div id="palette-list" class="palette-list"></div>
+        <div class="theme-header">
+          <h3>Mi Tema</h3>
+          <div class="theme-name-wrap">
+            <input type="text" id="theme-name" class="input-mono input-small" value="NamasColor Custom" spellcheck="false" placeholder="Nombre del tema">
+          </div>
+        </div>
+        <div id="theme-slots" class="theme-slots"></div>
+
+        <!-- Semantic Colors -->
+        <div id="semantic-row" class="semantic-row">
+          <div class="semantic-slot">
+            <div id="sem-good" class="semantic-swatch" style="background:#08C792" data-key="good"></div>
+            <span class="semantic-label">Good</span>
+          </div>
+          <div class="semantic-slot">
+            <div id="sem-bad" class="semantic-swatch" style="background:#ED2939" data-key="bad"></div>
+            <span class="semantic-label">Bad</span>
+          </div>
+          <div class="semantic-slot">
+            <div id="sem-neutral" class="semantic-swatch" style="background:#F2C94C" data-key="neutral"></div>
+            <span class="semantic-label">Neutral</span>
+          </div>
+        </div>
+
+        <!-- Design Preferences -->
+        <div class="prefs-panel">
+          <h4>Preferencias de diseño</h4>
+          <div class="prefs-grid">
+            <div class="pref-item">
+              <label>Tema base</label>
+              <select id="pref-theme-base">
+                <option value="light">Claro</option>
+                <option value="dark">Oscuro</option>
+              </select>
+            </div>
+            <div class="pref-item">
+              <label>Bordes</label>
+              <select id="pref-borders">
+                <option value="none">Sin bordes</option>
+                <option value="subtle">Sutiles</option>
+                <option value="corporate">Color corporativo</option>
+              </select>
+            </div>
+            <div class="pref-item">
+              <label>Esquinas</label>
+              <select id="pref-corners">
+                <option value="square">Rectas (0)</option>
+                <option value="rounded">Redondeadas (6px)</option>
+                <option value="very-rounded">Muy redondeadas (12px)</option>
+              </select>
+            </div>
+            <div class="pref-item">
+              <label>Sombras</label>
+              <select id="pref-shadows">
+                <option value="none">Sin sombras</option>
+                <option value="subtle">Sutiles</option>
+                <option value="strong">Marcadas</option>
+              </select>
+            </div>
+            <div class="pref-item">
+              <label>Fuente</label>
+              <select id="pref-font">
+                <option value="Segoe UI">Segoe UI</option>
+                <option value="DIN">DIN</option>
+                <option value="custom">Otra...</option>
+              </select>
+            </div>
+            <div class="pref-item pref-font-hidden" id="pref-font-custom-wrap">
+              <label>Nombre</label>
+              <input type="text" id="pref-font-custom" class="pref-font-input" value="" placeholder="Nombre de la fuente" spellcheck="false">
+            </div>
+            <div class="pref-item">
+              <label>Fondo visual</label>
+              <select id="pref-bg-visuals">
+                <option value="white">Blanco puro</option>
+                <option value="offwhite">Off-white</option>
+                <option value="transparent">Transparente</option>
+              </select>
+            </div>
+            <div class="pref-item">
+              <label>Filas alternas</label>
+              <select id="pref-alternate-rows">
+                <option value="yes">Sí</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="theme-actions">
+          <button id="btn-clear-theme" class="btn btn-ghost">Limpiar slots</button>
+        </div>
+        <div class="preset-row-label">Cargar paleta:</div>
+        <div id="preset-row" class="preset-row"></div>
       </section>
     </main>
   </div>

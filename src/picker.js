@@ -1,4 +1,4 @@
-// === NamasColor — Screen Picker ===
+// === NamasColor — Screen Picker (one window per monitor) ===
 
 (function() {
   const screenshotCanvas = document.getElementById('screenshot');
@@ -16,19 +16,34 @@
 
   let imgData = null;
   let scaleFactor = 1;
+  let ready = false;
 
-  // Receive screenshot from main process
+  // Receive screenshot from main process (one per window)
   if (window.namascolor) {
     window.namascolor.onScreenshotData((data) => {
+      const w = data.width;
+      const h = data.height;
+      scaleFactor = data.scaleFactor;
+
+      screenshotCanvas.width = w;
+      screenshotCanvas.height = h;
+      screenshotCanvas.style.width = w + 'px';
+      screenshotCanvas.style.height = h + 'px';
+
       const img = new Image();
       img.onload = () => {
-        screenshotCanvas.width = data.width * data.scaleFactor;
-        screenshotCanvas.height = data.height * data.scaleFactor;
-        screenshotCanvas.style.width = data.width + 'px';
-        screenshotCanvas.style.height = data.height + 'px';
-        screenshotCtx.drawImage(img, 0, 0);
-        imgData = screenshotCtx.getImageData(0, 0, screenshotCanvas.width, screenshotCanvas.height);
-        scaleFactor = data.scaleFactor;
+        // Draw scaled to logical size for visual background
+        screenshotCtx.drawImage(img, 0, 0, w, h);
+
+        // Store native-resolution image data for precise color picking
+        const offCanvas = document.createElement('canvas');
+        offCanvas.width = img.naturalWidth;
+        offCanvas.height = img.naturalHeight;
+        const offCtx = offCanvas.getContext('2d');
+        offCtx.drawImage(img, 0, 0);
+        imgData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
+
+        ready = true;
         magnifier.style.display = 'block';
         colorInfo.style.display = 'block';
       };
@@ -38,9 +53,8 @@
 
   function getPixel(x, y) {
     if (!imgData) return { r: 0, g: 0, b: 0 };
-    // Scale to actual pixel coordinates
-    const px = Math.round(x * scaleFactor);
-    const py = Math.round(y * scaleFactor);
+    const px = Math.min(Math.max(Math.round(x * scaleFactor), 0), imgData.width - 1);
+    const py = Math.min(Math.max(Math.round(y * scaleFactor), 0), imgData.height - 1);
     const idx = (py * imgData.width + px) * 4;
     return {
       r: imgData.data[idx] || 0,
@@ -84,7 +98,7 @@
   }
 
   document.addEventListener('mousemove', (e) => {
-    if (!imgData) return;
+    if (!ready) return;
 
     const mx = e.clientX;
     const my = e.clientY;
@@ -113,7 +127,7 @@
   });
 
   document.addEventListener('click', (e) => {
-    if (!imgData) return;
+    if (!ready) return;
     const pixel = getPixel(e.clientX, e.clientY);
     const hex = rgbToHex(pixel.r, pixel.g, pixel.b);
     if (window.namascolor) {
